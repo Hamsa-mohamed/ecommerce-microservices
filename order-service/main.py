@@ -2,6 +2,14 @@ from fastapi import FastAPI
 import uuid
 
 app = FastAPI(title="Order Service")
+@app.get("/orders")
+def get_orders():
+    return [
+        {"id": 1, "status": "CREATED"},
+        {"id": 2, "status": "PAID"},
+        {"id": 3, "status": "SHIPPED"}
+    ]
+
 
 orders = {}
 
