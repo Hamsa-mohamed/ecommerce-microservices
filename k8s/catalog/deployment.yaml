@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: catalog
-          image: catalog-service
+          image: catalog-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

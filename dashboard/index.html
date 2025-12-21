@@ -143,33 +143,43 @@ const ordersEl = document.getElementById("orders");
 const cartEl = document.getElementById("cart");
 const catalogEl = document.getElementById("catalog");
 
+const API_KEY = "secret-key-123";
 let lastOrders = [];
 
 /* ---------- ORDERS ---------- */
 function renderOrders(data) {
   ordersEl.innerHTML = "";
 
-  document.getElementById("total").innerText = data.length;
+  const orders = Array.isArray(data) ? data : [];
+  document.getElementById("total").innerText = orders.length;
   document.getElementById("paid").innerText =
-    data.filter(o => o.status === "PAID" || o.status === "SHIPPED").length;
+    orders.filter(o => o.status === "PAID" || o.status === "SHIPPED").length;
   document.getElementById("shipped").innerText =
-    data.filter(o => o.status === "SHIPPED").length;
+    orders.filter(o => o.status === "SHIPPED").length;
 
-  data.forEach(order => {
+  orders.forEach(order => {
     const div = document.createElement("div");
     div.className = "order";
+    const orderId = order.id || order.order_id || "unknown";
     div.innerHTML = `
       <div class="order-header">
-        <strong>Order #${order.id}</strong>
+        <strong>Order #${orderId}</strong>
         <span class="badge ${order.status}">${order.status}</span>
       </div>
+      <p>Amount: $${order.total_amount || 'N/A'}</p>
     `;
     ordersEl.appendChild(div);
   });
+
+  if (orders.length === 0) {
+    ordersEl.innerHTML = "<div class='order'>No orders yet</div>";
+  }
 }
 
 function loadOrders() {
-  fetch("/api/orders")
+  fetch("/api/orders", {
+    headers: { "X-API-Key": API_KEY }
+  })
     .then(r => r.json())
     .then(data => {
       if (JSON.stringify(data) !== JSON.stringify(lastOrders)) {
@@ -183,10 +193,11 @@ function loadOrders() {
 }
 
 /* ---------- CART ---------- */
-function renderCart(items) {
+function renderCart(data) {
   cartEl.innerHTML = "";
 
-  if (!items.length) {
+  const items = data.cart || data;
+  if (!items || !items.length) {
     cartEl.innerHTML = "<div class='order'>Cart is empty</div>";
     return;
   }
@@ -196,7 +207,7 @@ function renderCart(items) {
     div.className = "order";
     div.innerHTML = `
       <div class="order-header">
-        <strong>${item.product_name}</strong>
+        <strong>Product #${item.product_id}</strong>
         <span class="badge PAID">${item.quantity} pcs</span>
       </div>
     `;
@@ -205,7 +216,10 @@ function renderCart(items) {
 }
 
 function loadCart() {
-  fetch("/api/cart")
+  const userId = "demo-user";
+  fetch(`/api/cart/${userId}`, {
+    headers: { "X-API-Key": API_KEY }
+  })
     .then(r => r.json())
     .then(renderCart)
     .catch(() => {
@@ -225,18 +239,36 @@ function renderCatalog(products) {
         <strong>${p.name}</strong>
         <span class="badge CREATED">$${p.price}</span>
       </div>
+      <p>Stock: ${p.stock || 'N/A'}</p>
+      <button onclick="addToCart(${p.id})">Add to Cart</button>
     `;
     catalogEl.appendChild(div);
   });
 }
 
 function loadCatalog() {
-  fetch("/api/catalog")
+  fetch("/api/catalog", {
+    headers: { "X-API-Key": API_KEY }
+  })
     .then(r => r.json())
     .then(renderCatalog)
     .catch(() => {
       catalogEl.innerHTML = "<div class='error'>❌ Failed to load catalog</div>";
     });
+}
+
+function addToCart(productId) {
+  const userId = "demo-user";
+  fetch(`/api/cart/${userId}/add?product_id=${productId}&quantity=1`, {
+    method: "POST",
+    headers: { "X-API-Key": API_KEY }
+  })
+    .then(r => r.json())
+    .then(data => {
+      alert("Item added to cart!");
+      loadCart();
+    })
+    .catch(err => alert("Failed to add to cart"));
 }
 
 /* ---------- INIT ---------- */

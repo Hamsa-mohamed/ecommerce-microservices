@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: cart
-        image: cart-service
+        image: cart-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
