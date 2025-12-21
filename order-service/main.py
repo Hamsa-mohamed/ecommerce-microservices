@@ -1,7 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 import uuid
 
 app = FastAPI(title="Order Service")
+
+# ✅ CORS (الحل)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # عشان المشروع
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/orders")
 def get_orders():
     return [
@@ -9,7 +20,6 @@ def get_orders():
         {"id": 2, "status": "PAID"},
         {"id": 3, "status": "SHIPPED"}
     ]
-
 
 orders = {}
 
